@@ -13,12 +13,12 @@ mercadopago.configure({
   access_token: process.env.ACCESS_TOKEN
 });
 
-// 🧪 RUTA DE PRUEBA (para ver si funciona el server)
+// 🧪 RUTA PRINCIPAL (para probar)
 app.get("/", (req, res) => {
   res.send("Backend funcionando OK 🚀");
 });
 
-// 💳 CREAR PAGO (IMPORTANTE: GET para probar en navegador)
+// 💳 CREAR PAGO (IMPORTANTE: GET)
 app.get("/crear-preferencia", async (req, res) => {
   try {
     const preference = {
@@ -27,7 +27,7 @@ app.get("/crear-preferencia", async (req, res) => {
           title: "Suscripción Premium",
           quantity: 1,
           currency_id: "ARS",
-          unit_price: 1000
+          unit_price: 8000
         }
       ],
       back_urls: {
@@ -35,6 +35,7 @@ app.get("/crear-preferencia", async (req, res) => {
         failure: "https://google.com",
         pending: "https://google.com"
       },
+      // ⚠️ TU URL REAL
       notification_url: "https://backend-mp-1a6g.onrender.com/webhook",
       auto_return: "approved"
     };
@@ -51,13 +52,10 @@ app.get("/crear-preferencia", async (req, res) => {
   }
 });
 
-// 🔔 WEBHOOK (cuando alguien paga)
+// 🔔 WEBHOOK (cuando pagan)
 app.post("/webhook", async (req, res) => {
   try {
     console.log("Webhook recibido:", req.body);
-
-    // 👉 Aquí luego activamos premium (Firebase)
-    
     res.sendStatus(200);
   } catch (error) {
     console.log(error);
@@ -65,7 +63,7 @@ app.post("/webhook", async (req, res) => {
   }
 });
 
-// 🚀 PUERTO
+// 🚀 SERVIDOR
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto", PORT);
