@@ -3,17 +3,28 @@ require("dotenv").config();
 const express = require("express");
 const mercadopago = require("mercadopago");
 const cors = require("cors");
+const admin = require("firebase-admin");
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 🔐 CONFIGURAR MERCADO PAGO
+// 🔥 FIREBASE
+const serviceAccount = require("./firebase.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://miprimeraapp-62377-default-rtdb.firebaseio.com"
+});
+
+const db = admin.database();
+
+// 💳 MERCADO PAGO
 mercadopago.configure({
   access_token: process.env.ACCESS_TOKEN
 });
 
-// 🧪 RUTA PRINCIPAL
+// 🧪 TEST
 app.get("/", (req, res) => {
   res.send("Backend funcionando OK 🚀");
 });
@@ -21,6 +32,8 @@ app.get("/", (req, res) => {
 // 💳 CREAR PAGO
 app.get("/crear-preferencia", async (req, res) => {
   try {
+    const userId = req.query.userId || "user123";
+
     const preference = {
       items: [
         {
@@ -30,12 +43,9 @@ app.get("/crear-preferencia", async (req, res) => {
           unit_price: 8000
         }
       ],
-      back_urls: {
-        success: "https://google.com",
-        failure: "https://google.com",
-        pending: "https://google.com"
+      metadata: {
+        userId: userId
       },
-      // ✅ TU URL CORRECTA
       notification_url: "https://backend-mp-r7nd.onrender.com/webhook",
       auto_return: "approved"
     };
@@ -47,23 +57,41 @@ app.get("/crear-preferencia", async (req, res) => {
     });
 
   } catch (error) {
-    console.log("ERROR:", error);
-    res.status(500).send("Error al crear pago");
+    console.log(error);
+    res.status(500).send("Error");
   }
 });
 
-// 🔔 WEBHOOK (cuando pagan)
+// 🔔 WEBHOOK → ACTIVAR PREMIUM
 app.post("/webhook", async (req, res) => {
   try {
-    console.log("Webhook recibido:", req.body);
+    if (req.body.type === "payment") {
+
+      const payment = await mercadopago.payment.findById(req.body.data.id);
+
+      if (payment.body.status === "approved") {
+
+        const userId = payment.body.metadata.userId;
+
+        const expira = Date.now() + (30 * 24 * 60 * 60 * 1000);
+
+        await db.ref("usuarios/" + userId).update({
+          premium: true,
+          expira: expira
+        });
+
+        console.log("Premium activado:", userId);
+      }
+    }
+
     res.sendStatus(200);
+
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
 
-// 🚀 SERVIDOR
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto", PORT);
