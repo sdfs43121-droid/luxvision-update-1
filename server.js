@@ -13,12 +13,12 @@ mercadopago.configure({
   access_token: process.env.ACCESS_TOKEN
 });
 
-// 🧪 RUTA PRINCIPAL (para probar)
+// 🧪 RUTA PRINCIPAL
 app.get("/", (req, res) => {
   res.send("Backend funcionando OK 🚀");
 });
 
-// 💳 CREAR PAGO (IMPORTANTE: GET)
+// 💳 CREAR PAGO
 app.get("/crear-preferencia", async (req, res) => {
   try {
     const preference = {
@@ -35,8 +35,8 @@ app.get("/crear-preferencia", async (req, res) => {
         failure: "https://google.com",
         pending: "https://google.com"
       },
-      // ⚠️ TU URL REAL
-      notification_url: "https://backend-mp-1a6g.onrender.com/webhook",
+      // ✅ TU URL CORRECTA
+      notification_url: "https://backend-mp-r7nd.onrender.com/webhook",
       auto_return: "approved"
     };
 
@@ -64,7 +64,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 // 🚀 SERVIDOR
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log("Servidor corriendo en puerto", PORT);
 });
